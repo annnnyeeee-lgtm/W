@@ -28,10 +28,6 @@
       --widget-width: 260px;
       --column-gap: 18px;
 
-      /*
-        행 높이는 글자 크기 차이를 고려해
-        시각적 공백이 같아 보이도록 조정
-      */
       --main-row-height: 38px;
       --sub-row-height: 26px;
       --visual-row-gap: 7px;
@@ -109,11 +105,6 @@
 
     /*
       현재 날씨 3행
-
-      1행은 큰 글자 때문에 높이를 크게,
-      2·3행은 같은 높이로 설정.
-
-      행 사이 gap은 모두 동일하게 적용.
     */
     .weather-grid {
       position: relative;
@@ -134,7 +125,7 @@
       padding: 0;
     }
 
-    /* 가운데 세로 구분선 */
+    /* 가운데 세로선 */
     .weather-grid::before {
       content: "";
 
@@ -184,43 +175,26 @@
       padding-left: 9px;
     }
 
-    /*
-      1행
-    */
     .main-value {
       font-size: var(--main-font-size);
       font-weight: 600;
       line-height: 1;
-
       letter-spacing: -0.02em;
     }
 
-    /* 현재 기온만 굵게 */
+    /* 현재 기온 굵게 */
     .current-temperature {
       font-weight: 800;
-
-      /*
-        숫자 글자의 시각 중심을
-        이모지와 맞추기 위한 미세 보정
-      */
       transform: translateY(-1px);
     }
 
-    /*
-      2·3행
-    */
     .sub-value {
       font-size: var(--sub-font-size);
       font-weight: 600;
       line-height: 1;
-
       letter-spacing: -0.02em;
     }
 
-    /*
-      컬러 이모지는 시스템 폰트와
-      상하 여백이 다르기 때문에 미세 조정
-    */
     .weather-icon {
       font-family:
         "Apple Color Emoji",
@@ -233,11 +207,11 @@
     }
 
     /*
-      내일부터 6일간 날씨
+      오늘 제외, 내일부터 5일
     */
     .weekly-weather {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(5, 1fr);
 
       width: 100%;
       margin-top: 12px;
@@ -354,10 +328,12 @@
 
   <main class="weather-widget">
 
+    <!-- 위치 기준 -->
     <div class="location-row" id="locationText">
       위치 확인 중
     </div>
 
+    <!-- 현재 날씨 -->
     <section class="weather-grid">
 
       <!-- 1행 -->
@@ -407,37 +383,32 @@
 
     </section>
 
-    <!-- 오늘 제외, 내일부터 6일 -->
+    <!-- 내일부터 5일 -->
     <section class="weekly-weather" id="weeklyWeather">
 
       <div class="forecast-day">
         <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
+        <div class="forecast-date">- -</div>
       </div>
 
       <div class="forecast-day">
         <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
+        <div class="forecast-date">- -</div>
       </div>
 
       <div class="forecast-day">
         <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
+        <div class="forecast-date">- -</div>
       </div>
 
       <div class="forecast-day">
         <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
+        <div class="forecast-date">- -</div>
       </div>
 
       <div class="forecast-day">
         <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
-      </div>
-
-      <div class="forecast-day">
-        <div class="forecast-icon">☀</div>
-        <div class="forecast-date">--/-- -</div>
+        <div class="forecast-date">- -</div>
       </div>
 
     </section>
@@ -448,7 +419,7 @@
 
   <script>
     /*
-      위치 감지 실패 시 사용할 서울 중심 좌표
+      위치 감지 실패 시 서울 중심 좌표 사용
     */
     const fallbackLocation = {
       latitude: 37.5665,
@@ -457,7 +428,7 @@
     };
 
     /*
-      10분마다 날씨 갱신
+      10분마다 날씨 새로 요청
     */
     const refreshInterval = 10 * 60 * 1000;
 
@@ -502,7 +473,7 @@
     let displayedForecast = [];
 
     /*
-      WMO 날씨 코드 → 아이콘 한 개
+      WMO 날씨 코드를 아이콘 하나로 변환
     */
     function getWeatherIcon(weatherCode) {
       if (weatherCode === 0 || weatherCode === 1) {
@@ -523,13 +494,21 @@
     }
 
     /*
-      2026-08-01 → 8/1 토
+      날짜 표시 방식
+
+      일반 날짜:
+      2 일
+      31 금
+
+      매월 1일:
+      8/1 토
+      12/1 화
     */
     function formatForecastDate(dateString) {
       const parts = dateString.split("-");
 
       if (parts.length !== 3) {
-        return "--/-- -";
+        return "- -";
       }
 
       const year = Number(parts[0]);
@@ -553,7 +532,11 @@
       const weekday =
         weekdayNames[date.getUTCDay()];
 
-      return `${month}/${day} ${weekday}`;
+      if (day === 1) {
+        return `${month}/${day} ${weekday}`;
+      }
+
+      return `${day} ${weekday}`;
     }
 
     function updateText(element, key, newValue) {
@@ -702,7 +685,11 @@
 
         timezone: "Asia/Seoul",
         temperature_unit: "celsius",
-        forecast_days: "7"
+
+        /*
+          오늘 + 이후 5일
+        */
+        forecast_days: "6"
       });
 
       if (modelName) {
@@ -738,8 +725,8 @@
     }
 
     /*
-      한국 모델 우선,
-      실패 시 Open-Meteo 기본 모델
+      한국 기상청 모델을 우선 요청하고
+      실패하면 Open-Meteo 기본 모델 사용
     */
     async function getWeatherData(
       latitude,
@@ -859,11 +846,12 @@
       );
 
       /*
-        오늘 제외, 내일부터 6일
+        index 0은 오늘
+        index 1부터 내일 포함 5일
       */
       updateWeeklyWeather(
-        data.daily.time.slice(1, 7),
-        data.daily.weather_code.slice(1, 7)
+        data.daily.time.slice(1, 6),
+        data.daily.weather_code.slice(1, 6)
       );
 
       elements.locationText.textContent =
@@ -877,8 +865,8 @@
     }
 
     /*
-      현재 위치 감지
-      실패하면 서울
+      현재 위치 자동 감지
+      실패하면 서울 반환
     */
     function requestLocation() {
       return new Promise((resolve) => {
@@ -915,6 +903,10 @@
           {
             enableHighAccuracy: true,
             timeout: 10000,
+
+            /*
+              10분 이내 위치 정보 재사용
+            */
             maximumAge: 10 * 60 * 1000
           }
         );
@@ -961,7 +953,7 @@
       }
 
       /*
-        10분마다 같은 위치의 날씨 갱신
+        10분마다 날씨 갱신
       */
       setInterval(async () => {
         try {
